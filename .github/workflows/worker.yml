@@ -1,0 +1,46 @@
+name: DM Worker
+
+# Keeps the OpenReply DM worker running on GitHub Actions (public repo = free).
+# A fresh job starts every 5 hours; each job may run up to ~5h50m, so rotations
+# overlap slightly and the queue never sits unprocessed for long.
+# NOTE: GitHub auto-disables scheduled workflows after 60 days without repo
+# activity — any commit to this repo resets that clock.
+# Env names below are the codebase's canonical names (see .env.example).
+
+on:
+  schedule:
+    - cron: "7 */5 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: openreply-dm-worker
+  cancel-in-progress: false
+
+jobs:
+  worker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Run DM worker
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+          INSTAGRAM_APP_ID: ${{ secrets.INSTAGRAM_APP_ID }}
+          INSTAGRAM_APP_SECRET: ${{ secrets.INSTAGRAM_APP_SECRET }}
+          FACEBOOK_APP_SECRET: ${{ secrets.FACEBOOK_APP_SECRET }}
+          WEBHOOK_VERIFY_TOKEN: ${{ secrets.WEBHOOK_VERIFY_TOKEN }}
+        run: npm run worker
