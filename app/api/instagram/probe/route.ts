@@ -37,6 +37,26 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Media mode: ?mediaId=<id> reads that media's fields (incl. its
+  // location tag) — used to recover the place ID of a location the
+  // owner set in-app so later API posts can reuse it.
+  const mediaId = request.nextUrl.searchParams.get("mediaId");
+  if (mediaId) {
+    const mqs = new URLSearchParams({
+      fields: "id,media_type,permalink,location{id,name}",
+      access_token: ctx.accessToken,
+    }).toString();
+    const murl = `https://graph.instagram.com/${getMetaGraphApiVersion()}/${mediaId}?${mqs}`;
+    const mres = await fetch(murl);
+    const mjson = await mres.json().catch(() => ({}));
+    return NextResponse.json({
+      success: true,
+      username: account.username,
+      graphStatus: mres.status,
+      graphBody: mjson,
+    });
+  }
+
   const qs = new URLSearchParams({
     fields: "quota_usage",
     access_token: ctx.accessToken,

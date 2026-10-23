@@ -9,6 +9,7 @@ export default function PosterPage() {
   const [accountId, setAccountId] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [caption, setCaption] = useState("");
+  const [locationId, setLocationId] = useState("");
   const [containerId, setContainerId] = useState("");
   const [createOut, setCreateOut] = useState("");
   const [publishOut, setPublishOut] = useState("");
@@ -50,6 +51,7 @@ export default function PosterPage() {
         instagramAccountId: accountId,
         videoUrl,
         caption,
+        ...(locationId.trim() ? { locationId: locationId.trim() } : {}),
       });
       setCreateOut(JSON.stringify(j, null, 2));
       if (j?.containerId) setContainerId(j.containerId);
@@ -153,6 +155,17 @@ export default function PosterPage() {
         style={{ ...field, minHeight: "220px" }}
         value={caption}
         onChange={(e) => setCaption(e.target.value)}
+      />
+
+      <label style={label} htmlFor="locationId">
+        Location ID (optional — numeric place ID, e.g. India)
+      </label>
+      <input
+        id="locationId"
+        style={field}
+        value={locationId}
+        onChange={(e) => setLocationId(e.target.value)}
+        placeholder="leave empty for no location"
       />
 
       <button style={btn} onClick={doCreate} disabled={busy}>
